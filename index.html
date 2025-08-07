@@ -1,1 +1,696 @@
-<My Portfolio>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Elites - UAE Formal Wear Market Research</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- Animation Keyframes --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+        @keyframes cardReveal {
+            from { opacity: 0; transform: scale(0.8) rotate(-10deg); }
+            to { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes buttonPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Animation Classes --- */
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .form-section.fade-out {
+            animation: fadeOut 0.4s ease-in forwards;
+        }
+        .btn-pressed {
+            animation: buttonPress 0.2s ease-in-out;
+        }
+
+        /* --- Custom UI Styles --- */
+        .form-radio-custom {
+            appearance: none;
+            border: 2px solid #000;
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            position: relative;
+            top: 0.2rem;
+            transition: all 0.2s;
+        }
+        .form-radio-custom:checked {
+            background-color: #000;
+            border-color: #000;
+            transform: scale(1.1);
+        }
+        .form-checkbox-custom {
+            appearance: none;
+            border: 2px solid #000;
+            border-radius: 0.25rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            position: relative;
+            top: 0.2rem;
+            transition: all 0.2s;
+        }
+        .form-checkbox-custom:checked {
+            background-color: #000;
+            border-color: #000;
+            transform: rotate(10deg) scale(1.1);
+        }
+        .form-checkbox-custom:checked::after {
+            content: '✔';
+            color: #fff;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(-10deg);
+            font-size: 0.8rem;
+        }
+        .progress-bar-fill {
+            transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        /* --- Coupon Card Style --- */
+        #coupon-card {
+            display: none;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 400px;
+            margin: 2rem auto 0;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: cardReveal 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-white text-black">
+
+    <!-- Pre-Survey Authentication Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md text-center" style="animation: fadeIn 0.5s ease-out;">
+            <h2 class="text-2xl font-bold mb-2">OFFICE ELITES UAE</h2>
+            <p class="text-gray-700 mb-6">FORMAL WEAR MARKET RESEARCH</p>
+            <div class="text-left">
+                <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" id="fullName" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:ring-2 focus:ring-black focus:border-black transition-all" placeholder="e.g., John Doe">
+                
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" id="email" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:ring-2 focus:ring-black focus:border-black transition-all" placeholder="you@example.com">
+                
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input type="tel" id="phone" class="w-full p-3 border border-gray-300 rounded-md mb-4 focus:ring-2 focus:ring-black focus:border-black transition-all" placeholder="+971 50 123 4567">
+                
+                <p id="auth-error" class="text-red-500 text-sm mb-4 hidden">Please provide your full name and either an email or a phone number.</p>
+            </div>
+            <button id="start-survey-btn" class="w-full bg-black text-white py-3 rounded-md font-semibold hover:bg-gray-800 transition duration-300 transform hover:scale-105">Start Survey</button>
+        </div>
+    </div>
+
+    <!-- Main Form Container -->
+    <div id="main-form" class="hidden container mx-auto max-w-4xl p-4 sm:p-8">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold">OFFICE ELITES UAE</h1>
+            <p class="text-lg text-gray-600">FORMAL WEAR MARKET RESEARCH</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between mb-1">
+                <span id="section-title" class="text-base font-medium text-black">Introduction</span>
+                <span id="progress-text" class="text-sm font-medium text-black">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-black h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <form id="research-form">
+            <!-- Introduction Section -->
+            <div id="section-0" class="form-section active">
+                <div class="bg-gray-50 p-8 rounded-lg text-center">
+                    <h2 class="text-2xl font-bold mb-4">Congratulations—you've just unlocked the front row seat to the future of men's style in the UAE!</h2>
+                    <p class="mb-6 text-gray-700">Complete this survey and you're guaranteed:</p>
+                    <ul class="text-left list-disc list-inside mb-6 mx-auto max-w-md space-y-2">
+                        <li><span class="font-semibold">VIP Early Access</span></li>
+                        <li><span class="font-semibold">100 AED or 20% OFF</span> your first order</li>
+                        <li>The <span class="font-semibold">Power to shape</span> what EVERY office elite wears next</li>
+                    </ul>
+                    <p class="text-gray-700">You're 10 sections and just 12-15 minutes away from making fashion history. Ready? Let's begin with who you are—because your voice matters most!</p>
+                </div>
+            </div>
+            
+            <!-- Dynamically Inserted Sections Will Go Here -->
+
+            <!-- Submission/Thank You Section -->
+            <div id="section-11" class="form-section">
+                 <div class="bg-gray-50 p-8 rounded-lg text-center">
+                    <div id="pre-submit-content">
+                        <h2 class="text-2xl font-bold mb-4">That's it—FOUNDERS get recognized.</h2>
+                        <p class="mb-6 text-gray-700">Hit submit for your reward, eternal gratitude, and unbeatable style!</p>
+                        <button type="button" id="submit-btn" class="bg-black text-white py-3 px-8 rounded-md font-semibold hover:bg-gray-800 transition duration-300 transform hover:scale-105">Submit & Claim Reward</button>
+                        <p id="submission-status" class="mt-4 text-sm"></p>
+                    </div>
+                    <div id="post-submit-content" class="hidden">
+                        <p class="text-lg text-green-600 font-semibold mb-4">Submission Sent!</p>
+                        <div id="coupon-card">
+                            <h3 class="text-lg font-bold text-yellow-400">YOUR FOUNDER REWARD</h3>
+                            <p class="text-sm text-gray-300 mb-4">Exclusive Coupon Code</p>
+                            <div class="bg-white text-black text-2xl font-mono p-3 rounded-md my-4" id="coupon-code-reveal">
+                                <!-- Code injected by JS -->
+                            </div>
+                            <p class="text-sm">Valid for 100 AED or 20% OFF your first order.</p>
+                        </div>
+                        <p class="mt-6 text-gray-700">We will send you a reminder before our official launch so you can redeem your coupon. Thank you for making your mark!</p>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Navigation Buttons -->
+        <div class="mt-8 flex justify-between">
+            <button type="button" id="prev-btn" class="bg-gray-200 text-black py-2 px-6 rounded-md font-semibold hover:bg-gray-300 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+            <button type="button" id="next-btn" class="bg-black text-white py-2 px-6 rounded-md font-semibold hover:bg-gray-800 transition duration-300">Next</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM Elements ---
+            const authModal = document.getElementById('auth-modal');
+            const mainForm = document.getElementById('main-form');
+            const startSurveyBtn = document.getElementById('start-survey-btn');
+            const fullNameInput = document.getElementById('fullName');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const authError = document.getElementById('auth-error');
+            const researchForm = document.getElementById('research-form');
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const sectionTitleEl = document.getElementById('section-title');
+            const submissionStatus = document.getElementById('submission-status');
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            const couponCodeReveal = document.getElementById('coupon-code-reveal');
+            const couponCard = document.getElementById('coupon-card');
+            const preSubmitContent = document.getElementById('pre-submit-content');
+            const postSubmitContent = document.getElementById('post-submit-content');
+
+
+            // --- State ---
+            let currentSection = 0;
+            const totalSections = 12; // 1 intro + 10 questions + 1 submit
+            let couponCode = '';
+            let isNavigating = false;
+
+            // --- Survey Data with Engagement Hooks ---
+            const surveyData = {
+                sections: [
+                    { 
+                        title: "Participant Screening & Demographics", 
+                        hook: "You’re officially helping launch the boldest new brand for office men in the UAE. This first step is simple: tell us about yourself so your future wardrobe fits not just your body—but your journey.\n\nOnly 9 sections left, and every answer brings you closer to your exclusive reward!", 
+                        questions: [
+                            { q: "Age Group", type: "radio", name: "age_group", options: ["22-25", "26-30", "31-35", "36-40", "41-45", "46-50", "51-55", "56+"] },
+                            { q: "Where do you live?", type: "radio", name: "live_location", options: ["Dubai", "Sharjah", "Ajman", "Abu Dhabi", "Ras Al Khaimah (RAK)", "Fujairah", "Umm Al Quwain (UAQ)"] },
+                            { q: "Where do you work?", type: "radio", name: "work_location", options: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah (RAK)", "Fujairah", "Umm Al Quwain (UAQ)", "Work from home"] },
+                            { q: "Annual Income", type: "radio", name: "annual_income", options: ["Below AED 100,000", "AED 100,000-200,000", "AED 200,000-350,000", "AED 350,000-500,000", "AED 500,000-750,000", "Above AED 750,000", "Prefer not to say"] },
+                            { q: "Industry", type: "radio", name: "industry", options: ["Banking/Finance", "Consulting", "Technology", "Government", "Healthcare", "Real Estate", "Legal", "Education", "Hospitality", "Oil & Gas", "Construction", "Other"] },
+                            { q: "Job Level", type: "radio", name: "job_level", options: ["Entry Level", "Mid-Level", "Senior Level", "Management", "Director/VP", "C-Suite", "Entrepreneur/Business Owner"] },
+                            { q: "How often do you wear formal wear? (Select One)", type: "radio", name: "formal_wear_frequency", options: ["Daily", "3-4 times per week", "1-2 times per week", "Few times per month", "Special occasions only", "Never"] }
+                        ]
+                    },
+                    { 
+                        title: "Formal Shirts", 
+                        hook: "You’re now in the designer’s seat—what kinds of shirts will become every office man's go-to? Your preferences today will be tomorrow’s industry trends.\n\n8 sections left. Curate your future closet and claim your reward!", 
+                        questions: [
+                            { q: "How many formal shirts do you currently own?", type: "radio", name: "shirts_owned", options: ["1-5", "6-10", "11-15", "16-20", "21-30", "30+"] },
+                            { q: "How many formal shirts do you purchase annually?", type: "radio", name: "shirts_purchased_annually", options: ["1-3", "4-6", "7-9", "10-12", "13-15", "16+"] },
+                            { q: "What is your usual budget per formal shirt?", type: "radio", name: "shirt_budget", options: ["AED 50-100", "AED 100-150", "AED 150-200", "AED 200-250", "AED 250-300", "AED 300+"] },
+                            { q: "Where do you usually buy formal shirts?", type: "checkbox", name: "shirt_purchase_location", options: ["H&M", "Next", "M&S", "Massimo Dutti", "Hugo Boss", "Local tailors", "Online (Amazon, Noon, etc.)", "Department stores"], other: true },
+                            { q: "Which collar styles do you prefer? (Select all that apply)", type: "checkbox", name: "collar_styles", options: ["Spread collar", "Point collar", "Button-down collar", "Cutaway collar", "Tab collar", "Wing collar", "No preference"] },
+                            { q: "Which cuff styles do you prefer? (Select all that apply)", type: "checkbox", name: "cuff_styles", options: ["Barrel cuffs (button)", "French cuffs (cufflinks)", "Convertible cuffs", "No preference"] },
+                            { q: "Which fabric do you prefer? (Select all that apply)", type: "checkbox", name: "shirt_fabric", options: ["100% Cotton", "Cotton blends", "Egyptian cotton", "Bamboo fiber", "Linen blends", "Wrinkle-free/Easy care", "No preference"] },
+                            { q: "Which shirt colors do you like? (Select all that apply)", type: "checkbox", name: "shirt_colors", options: ["White", "Light blue", "Navy blue", "Light pink", "Lavender", "Light gray", "Cream/Ivory"], other: true },
+                            { q: "What shirt pattern/type do you prefer? (Select all that apply)", type: "checkbox", name: "shirt_pattern", options: ["Solid colors only", "Striped patterns", "Checkered patterns"], other: true },
+                            { q: "Fit preference?", type: "radio", name: "shirt_fit", options: ["Slim fit", "Regular fit", "Classic fit", "Tailored fit", "Depends on the occasion"] },
+                            { q: "Rate the importance of each feature for formal shirts (1=Not important, 5=Extremely important)", type: "rating", name: "shirt_features", features: ["Wrinkle resistance", "Stain resistance", "Breathability", "Durability", "Easy care", "Perfect fit", "Color fastness", "Premium appearance"] },
+                            { q: "Biggest problems faced with formal shirts (Open-ended)", type: "textarea", name: "shirt_problems", placeholder: "Please describe any issues you face..." },
+                            { q: "If prices were similar, would you be interested in custom/tailored shirts?", type: "radio", name: "custom_shirts_interest", options: ["Yes", "Maybe", "No"] }
+                        ]
+                    },
+                    { 
+                        title: "Business Suits", 
+                        hook: "Suit up for influence! Your insights here will help us craft suits worthy of leaders—and worthy of you.\n\nReach this section, and you're already a third of the way to your VIP voucher.", 
+                        questions: [
+                            { q: "How many business suits do you currently own?", type: "radio", name: "suits_owned", options: ["None", "1-2", "3-5", "6-8", "9-12", "13+"] },
+                            { q: "How often do you buy a new suit?", type: "radio", name: "suit_purchase_frequency", options: ["Every 6 months", "Once a year", "Every 2 years", "Every 3-4 years", "Only when needed", "Rarely/Never"] },
+                            { q: "What's your usual budget for a suit?", type: "radio", name: "suit_budget", options: ["AED 300-600", "AED 600-1000", "AED 1000-1500", "AED 1500-2500", "AED 2500-4000", "AED 4000+"] },
+                            { q: "Suit styles preferred (Select all that apply)", type: "checkbox", name: "suit_styles", options: ["Single-breasted 2-button", "Single-breasted 3-button", "Double-breasted", "Three-piece (with vest)", "Two-piece only"] },
+                            { q: "Suit color preference (Select all that apply)", type: "checkbox", name: "suit_colors", options: ["Navy blue", "Charcoal gray", "Black", "Light gray", "Dark brown", "Pinstripe patterns", "Solid colors only", "Subtle patterns"] },
+                            { q: "Preferred fabric weight?", type: "radio", name: "suit_fabric_weight", options: ["Lightweight (200-250 GSM)", "Medium weight (250-300 GSM)", "Heavyweight (300+ GSM)", "Depends on season"] },
+                            { q: "Preferred fabric composition? (Select all that apply)", type: "checkbox", name: "suit_fabric_composition", options: ["100% Wool", "Wool blends", "Cotton blends", "Linen blends", "Synthetic blends", "Wrinkle-resistant"] },
+                            { q: "Occasions you wear suits (Select all that apply)", type: "checkbox", name: "suit_occasions", options: ["Daily work", "Client meetings", "Board meetings", "Presentations", "Networking events", "Weddings", "Formal dinners", "Court appearances"] },
+                            { q: "How important is bundled accessory coordination (shirt, tie, pocket square)?", type: "rating", name: "accessory_coordination_importance", features: ["Importance"], single: true },
+                            { q: "Do you prefer buying suit pieces separately or complete sets?", type: "radio", name: "suit_purchase_preference", options: ["Jacket and pants separately", "Complete set", "No preference"] },
+                            { q: "Importance of professional alteration services:", type: "rating", name: "alteration_importance", features: ["Importance"], single: true }
+                        ]
+                    },
+                    { 
+                        title: "Dress Pants", 
+                        hook: "Ever wanted pants that understand your style and comfort needs? Now’s your chance to make them real! Every option you select shapes our collection.\n\nJust 6 sections left. Your journey to legendary status continues!", 
+                        questions: [
+                            { q: "How many dress pants (excluding suit pants) do you currently own?", type: "radio", name: "pants_owned", options: ["1-3", "4-6", "7-10", "11-15", "16+"] },
+                            { q: "How often do you purchase new dress pants?", type: "radio", name: "pants_purchase_frequency", options: ["Monthly", "Every 2-3 months", "Every 6 months", "Once a year", "Every 2 years", "Rarely"] },
+                            { q: "What is your typical budget per pair of dress pants?", type: "radio", name: "pants_budget", options: ["AED 80-150", "AED 150-250", "AED 250-350", "AED 350-500", "AED 500+"] },
+                            { q: "Which dress pant styles do you prefer? (Select all that apply)", type: "checkbox", name: "pant_styles", options: ["Flat front", "Pleated front", "Slim fit", "Regular fit", "Relaxed fit", "Tapered leg", "Straight leg"] },
+                            { q: "Which colors do you like for dress pants? (Select all that apply)", type: "checkbox", name: "pant_colors", options: ["Black", "Navy blue", "Charcoal gray", "Light gray", "Khaki/Beige", "Dark brown", "Pinstripe"], other: true },
+                            { q: "What type of pattern do you prefer for dress pants?", type: "radio", name: "pant_pattern", options: ["Solid color only", "Pinstripe", "Subtle pattern", "No preference"] },
+                            { q: "Cuff preference for dress pants:", type: "radio", name: "pant_cuffs", options: ["With cuffs", "Without cuffs", "No preference", "Depends on the style"] },
+                            { q: "Waist style preference (Select all that apply)", type: "checkbox", name: "pant_waist_style", options: ["Traditional waistband", "Extended tab closure", "Side adjusters", "Elastic waistband", "No preference"] },
+                            { q: "Rate the importance of these features in dress pants (1=Not important, 5=Extremely important)", type: "rating", name: "pant_features", features: ["Wrinkle resistance", "Stretch/flexibility", "Breathability", "Durability", "Easy care", "Stain resistance"] }
+                        ]
+                    },
+                    { 
+                        title: "Leather Shoes", 
+                        hook: "Step ahead of the pack—literally. Your favorites inspire the next wave of must-have office shoes, and your reward is just steps away.\n\nCross this, and you're over halfway. Only 5 sections left until you become an Office Elites founder-insider!", 
+                        questions: [
+                            { q: "How many pairs of leather shoes do you currently own?", type: "radio", name: "shoes_owned", options: ["1-2", "3-4", "5-6", "7-10", "11+"] },
+                            { q: "How often do you purchase leather shoes?", type: "radio", name: "shoe_purchase_frequency", options: ["Every 6 months", "Once a year", "Every 2 years", "Every 3+ years", "Only when needed"] },
+                            { q: "What is your usual budget per pair?", type: "radio", name: "shoe_budget", options: ["AED 200-400", "AED 400-600", "AED 600-800", "AED 800-1200", "AED 1200-2000", "AED 2000+"] },
+                            { q: "What shoe styles do you wear? (Select all that apply)", type: "checkbox", name: "shoe_styles", options: ["Oxford", "Derby", "Brogue", "Monk strap", "Loafers", "Chelsea boots", "Cap toe", "Plain toe"] },
+                            { q: "Preferred colors for leather shoes (Select all that apply)", type: "checkbox", name: "shoe_colors", options: ["Black", "Dark brown", "Light brown/Tan", "Burgundy", "Navy blue", "Two-tone combinations"] },
+                            { q: "Preferred leather types (Select all that apply)", type: "checkbox", name: "leather_types", options: ["Full grain leather", "Top grain leather", "Patent leather", "Suede", "Not sure about leather types"], other: true },
+                            { q: "Rate the importance of these features (1-5)", type: "rating", name: "shoe_features", features: ["Comfort for long wear", "Durability", "Style/appearance", "Brand reputation", "Price value", "Breathability"] },
+                            { q: "Do you have any specific foot needs? (Select all that apply)", type: "checkbox", name: "foot_needs", options: ["Arch support", "Extra cushioning", "Wide width options", "Narrow width options", "Anti-slip soles", "No special needs"] },
+                            { q: "From which stores/brands do you usually purchase leather shoes? (Select all that apply)", type: "checkbox", name: "shoe_stores", options: ["Clarks", "Marks & Spencer (M&S)", "Hugo Boss", "Local shoe stores", "Online retailers", "Department stores", "Luxury boutiques"], other: true }
+                        ]
+                    },
+                    { 
+                        title: "Accessories", 
+                        hook: "You know that perfect finishing touch? Now you get to invent it. Tell us what you want—and we’ll make it happen.\n\nJust 4 short sections remain. Every answer is a ticket to your discount—and bragging rights.", 
+                        questions: [
+                            { q: "Which accessories do you regularly use? (Select all that apply)", type: "checkbox", name: "accessories_used", options: ["Leather belts", "Wallets", "Ties", "Bow ties", "Pocket squares", "Cufflinks", "Tie clips", "Watches", "Briefcases/bags"] },
+                            { q: "How frequently do you purchase accessories?", type: "radio", name: "accessory_purchase_frequency", options: ["Monthly", "Every 2-3 months", "Every 6 months", "Once a year", "Every 2+ years"] },
+                            { q: "What is your usual budget for the following accessories?", type: "multiradio", name: "accessory_budgets", items: [
+                                { item: "Leather belts", options: ["AED 50-100", "100-200", "200-400", "400+"] },
+                                { item: "Wallets", options: ["AED 100-200", "200-400", "400-600", "600+"] },
+                                { item: "Ties", options: ["AED 50-100", "100-200", "200-300", "300+"] }
+                            ]},
+                            { q: "Preferred leather type for accessories:", type: "radio", name: "accessory_leather_type", options: ["Genuine leather", "Full grain leather", "Italian leather", "Exotic leather", "Synthetic leather", "No preference"] },
+                            { q: "Preferred accessory colors (Select all that apply)", type: "checkbox", name: "accessory_colors", options: ["Black", "Dark brown", "Light brown/Tan", "Burgundy", "Navy blue", "Two-tone combinations"] },
+                            { q: "How often do you buy accessories as gifts?", type: "radio", name: "gift_frequency", options: ["Very frequently", "Occasionally", "Rarely", "Never", "Only for special occasions"] },
+                            { q: "Gift occasions (Select all that apply)", type: "checkbox", name: "gift_occasions", options: ["Birthdays", "Weddings", "Promotions/achievements", "Eid celebrations", "Christmas/New Year", "Father's Day", "Graduation"], other: true },
+                            { q: "Rate importance for each when buying accessories (1-5)", type: "rating", name: "accessory_features", features: ["Quality/durability", "Style/design", "Brand reputation", "Price value", "Gift presentation", "Unique designs"] }
+                        ]
+                    },
+                    { 
+                        title: "Perfumes", 
+                        hook: "What should power and sophistication smell like? Share your scent secrets and we’ll bottle them into our first signature collection—with you as co-creator.\n\n3 sections left. Those who finish get first pick from our exclusive fragrance line!", 
+                        questions: [
+                            { q: "How many perfumes/fragrances do you currently own?", type: "radio", name: "perfumes_owned", options: ["1-3", "4-6", "7-10", "11-15", "16+"] },
+                            { q: "How frequently do you purchase perfumes?", type: "radio", name: "perfume_purchase_frequency", options: ["Monthly", "Every 2-3 months", "Every 6 months", "Once a year", "Every 2+ years"] },
+                            { q: "Usual budget per perfume bottle:", type: "radio", name: "perfume_budget", options: ["AED 100-200", "AED 200-400", "AED 400-600", "AED 600-1000", "AED 1000+"] },
+                            { q: "Which fragrance families do you prefer? (Select all that apply)", type: "checkbox", name: "fragrance_families", options: ["Woody (Oud, Sandalwood)", "Fresh/Citrus", "Oriental/Spicy", "Floral", "Aquatic/Marine", "Leather", "Amber", "Musk"] },
+                            { q: "Cultural fragrance preference:", type: "radio", name: "fragrance_culture", options: ["Strongly prefer Arabic/Oud-based", "Slightly prefer Arabic", "No preference", "Slightly prefer International", "Strongly prefer International"] },
+                            { q: "Which notes do you like in your perfumes? (Select all that apply)", type: "checkbox", name: "perfume_notes", options: ["Oud", "Rose", "Sandalwood", "Amber", "Musk", "Bergamot", "Vanilla", "Patchouli", "Cedar", "Frankincense"] },
+                            { q: "Preferred concentration?", type: "radio", name: "perfume_concentration", options: ["Light (Eau de Cologne)", "Moderate (Eau de Toilette)", "Strong (Eau de Parfum)", "Very Strong (Parfum/Attar)", "Varies by occasion"] },
+                            { q: "When do you usually wear perfumes? (Select all that apply)", type: "checkbox", name: "perfume_occasions", options: ["Daily office wear", "Evening events", "Special occasions", "Weekend casual", "Religious occasions", "Seasonal preferences"] },
+                            { q: "How important is bottle design and packaging?", type: "rating", name: "bottle_design_importance", features: ["Importance"], single: true },
+                            { q: "How often do you buy perfumes as gifts?", type: "radio", name: "perfume_gift_frequency", options: ["Very frequently", "Occasionally", "Rarely", "Never", "Only for special occasions"] },
+                            { q: "Favourite/perceived brands (Select all that apply)", type: "checkbox", name: "perfume_brands", options: ["Ajmal", "Swiss Arabian", "Al Haramain", "Rasasi", "Tom Ford", "Creed", "Hugo Boss", "Calvin Klein", "Local perfume shops"], other: true },
+                            { q: "Where do you usually buy your perfumes? (Select all that apply)", type: "checkbox", name: "perfume_purchase_location", options: ["Perfume shops in souks", "Department stores", "Specialty fragrance stores", "Online retailers", "Duty-free shops", "Brand boutiques"] }
+                        ]
+                    },
+                    { 
+                        title: "Shopping Behavior & Brand Perception", 
+                        hook: "The smartest brands learn directly from their top customers. That’s you. Reveal how you shop and what you trust—so we build a brand worthy of your loyalty.\n\nAfter this, just 2 final sections and the reward is in your hands!", 
+                        questions: [
+                            { q: "Which methods do you use when shopping for formal wear? (Select all that apply)", type: "checkbox", name: "shopping_methods", options: ["In-store browsing", "Online research then in-store purchase", "Pure online shopping", "Mobile app shopping", "Social media-inspired purchases"] },
+                            { q: "Which factors influence your purchase decisions? (Select top 3)", type: "checkbox", name: "purchase_factors", options: ["Price", "Quality", "Brand reputation", "Style/design", "Fit", "Customer reviews", "Return policy", "Delivery speed"], limit: 3 },
+                            { q: "How important is it for you to try before you buy?", type: "rating", name: "try_before_buy_importance", features: ["Importance"], single: true },
+                            { q: "Comfort with online shopping for formal wear (Select one)", type: "radio", name: "online_shopping_comfort", options: ["Very comfortable", "Somewhat comfortable", "Neutral", "Somewhat uncomfortable", "Very uncomfortable (even with good return policy)"] },
+                            { q: "What makes you switch brands? (Select all that apply)", type: "checkbox", name: "brand_switch_factors", options: ["Competitive pricing", "Superior quality", "Unique designs", "Good customer service", "Friend recommendation", "Online reviews", "Easy returns"] },
+                            { q: "Where do you get most style/fashion information? (Select all that apply)", type: "checkbox", name: "fashion_info_sources", options: ["Social media ads", "Google search", "Friend recommendations", "Professional networking events", "Email newsletters", "Fashion magazines"] },
+                            { q: "Social media channels you use? (Select all that apply)", type: "checkbox", name: "social_media_channels", options: ["Instagram", "LinkedIn", "Facebook", "Tik Tok", "Twitter", "YouTube", "WhatsApp", "None"] },
+                            { q: "Interest in value-added services?", type: "radio", name: "value_added_services", options: ["Styling consultation (in-person)", "Styling consultation (virtual)", "Interested if cost is minimal", "Not interested"] }
+                        ]
+                    },
+                    { 
+                        title: "Brand Positioning & Concept Testing", 
+                        hook: "Ready to judge a revolution? Tell us what you want, what you value most, and eliminate your doubts—your feedback steers our standards and promise.\n\nOne last section after this, and you’ll have made your mark on the UAE’s next great brand.", 
+                        questions: [
+                            { q: "If there was a new brand offering Pakistani-made formal wear with international quality standards at competitive prices, how interested would you be? (1=Not interested, 5=Extremely interested)", type: "rating", name: "new_brand_interest", features: ["Interest"], single: true },
+                            { q: "What concerns, if any, would you have about Pakistani-made formal wear? (Open-ended)", type: "textarea", name: "pakistani_made_concerns", placeholder: "Please list any concerns..." },
+                            { q: "What would convince you of high quality? (Select all that apply)", type: "checkbox", name: "quality_convincers", options: ["Quality certifications", "Customer testimonials", "Free trial/sample", "Brand partnerships", "Transparent manufacturing process", "Return guarantee"] },
+                            { q: "Level of interest in customization:", type: "radio", name: "customization_interest", options: ["Very interested", "Somewhat interested", "Maybe (depends on price)", "Prefer ready-made"] },
+                            { q: "Preferred delivery time for online orders:", type: "radio", name: "delivery_time_preference", options: ["Same day", "1-2 days", "3-5 days", "1 week", "2 weeks", "Not important"] },
+                            { q: "How do you feel about a formal wear subscription service?", type: "radio", name: "subscription_interest", options: ["Very interested", "Might try", "Maybe (depends on terms)", "Prefer individual purchases"] }
+                        ]
+                    },
+                    { 
+                        title: "Lead Generation & Follow-Up", 
+                        hook: "You’re the reason this vision comes alive.\n\nTell us how you’d like to receive your discount and early access—and let your final suggestions spark the ultimate office wear revolution.", 
+                        questions: [
+                            { q: "How would you like to be contacted for launch updates? (Select all that apply)", type: "checkbox", name: "contact_preference", options: ["Email", "WhatsApp", "Phone call", "Not interested"] },
+                            { q: "Would you be willing to provide feedback?", type: "radio", name: "feedback_willingness", options: ["Yes, interested", "Maybe (depends on time)", "Not interested"] },
+                            { q: "Any additional comments or suggestions about formal wear in the UAE market?", type: "textarea", name: "final_comments", placeholder: "Your final thoughts..." }
+                        ]
+                    }
+                ]
+            };
+
+            // --- Functions ---
+
+            function buildForm() {
+                surveyData.sections.forEach((section, sectionIndex) => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.id = `section-${sectionIndex + 1}`;
+                    sectionDiv.className = 'form-section';
+                    
+                    let sectionHTML = `<h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-2">${section.title}</h2>`;
+                    sectionHTML += `<p class="text-gray-600 mb-6 italic whitespace-pre-line">${section.hook}</p>`; // Added hook message
+
+                    section.questions.forEach((q, qIndex) => {
+                        sectionHTML += `<div class="mb-8">`;
+                        sectionHTML += `<p class="font-semibold mb-3">${qIndex + 1}. ${q.q}</p>`;
+                        
+                        switch (q.type) {
+                            case 'radio':
+                                q.options.forEach(opt => {
+                                    sectionHTML += `<label class="flex items-center mb-2 cursor-pointer"><input type="radio" name="${q.name}" value="${opt}" class="form-radio-custom">${opt}</label>`;
+                                });
+                                break;
+                            case 'checkbox':
+                                q.options.forEach(opt => {
+                                    sectionHTML += `<label class="flex items-center mb-2 cursor-pointer"><input type="checkbox" name="${q.name}" value="${opt}" class="form-checkbox-custom" ${q.limit ? `data-limit="${q.limit}"` : ''}>${opt}</label>`;
+                                });
+                                if (q.other) {
+                                    sectionHTML += `<input type="text" name="${q.name}_other" class="mt-2 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black transition-all" placeholder="Other (please specify)">`;
+                                }
+                                break;
+                            case 'rating':
+                                sectionHTML += `<div class="space-y-3">`;
+                                q.features.forEach(feature => {
+                                    sectionHTML += `<div><p class="mb-1">${feature}</p><div class="flex items-center space-x-2 sm:space-x-4">`;
+                                    for (let i = 1; i <= 5; i++) {
+                                        sectionHTML += `<label class="cursor-pointer"><input type="radio" name="${q.name}_${feature.replace(/\s+/g, '_').replace(/[\(\)]/g, '')}" value="${i}" class="sr-only peer"><span class="w-10 h-10 flex items-center justify-center rounded-full border-2 border-black peer-checked:bg-black peer-checked:text-white transition-all transform hover:scale-110">${i}</span></label>`;
+                                    }
+                                    sectionHTML += `</div></div>`;
+                                });
+                                sectionHTML += `</div>`;
+                                break;
+                            case 'textarea':
+                                sectionHTML += `<textarea name="${q.name}" class="w-full p-3 border border-gray-300 rounded-md h-24 focus:ring-2 focus:ring-black focus:border-black transition-all" placeholder="${q.placeholder}"></textarea>`;
+                                break;
+                            case 'multiradio':
+                                q.items.forEach(item => {
+                                    sectionHTML += `<p class="font-medium mt-4 mb-2">${item.item}</p><div class="flex flex-wrap gap-4">`;
+                                    item.options.forEach(opt => {
+                                        sectionHTML += `<label class="flex items-center cursor-pointer"><input type="radio" name="${q.name}_${item.item.replace(/\s+/g, '_')}" value="${opt}" class="form-radio-custom">${opt}</label>`;
+                                    });
+                                    sectionHTML += `</div>`;
+                                });
+                                break;
+                        }
+                        sectionHTML += `</div>`;
+                    });
+
+                    sectionDiv.innerHTML = sectionHTML;
+                    researchForm.insertBefore(sectionDiv, document.getElementById('section-11'));
+                });
+                
+                document.querySelectorAll('input[type="checkbox"][data-limit]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const limit = parseInt(e.target.dataset.limit, 10);
+                        const name = e.target.name;
+                        const checked = document.querySelectorAll(`input[name="${name}"]:checked`);
+                        if (checked.length > limit) {
+                            alert(`You can only select up to ${limit} options.`);
+                            e.target.checked = false;
+                        }
+                    });
+                });
+            }
+
+            function navigateToSection(targetSection) {
+                if (isNavigating) return;
+                isNavigating = true;
+
+                const currentEl = document.getElementById(`section-${currentSection}`);
+                currentEl.classList.add('fade-out');
+
+                setTimeout(() => {
+                    currentEl.classList.remove('active', 'fade-out');
+                    currentSection = targetSection;
+                    
+                    const nextEl = document.getElementById(`section-${currentSection}`);
+                    nextEl.classList.add('active');
+
+                    updateUI();
+                    isNavigating = false;
+                }, 400); // Match fadeOut animation duration
+            }
+
+            function updateUI() {
+                const progressPercentage = Math.round((currentSection / (totalSections - 2)) * 100);
+                progressBar.style.width = `${Math.min(progressPercentage, 100)}%`;
+                progressText.textContent = `${Math.min(progressPercentage, 100)}%`;
+
+                prevBtn.disabled = currentSection === 0;
+                
+                if (currentSection === 0) {
+                    sectionTitleEl.textContent = "Introduction";
+                    nextBtn.textContent = "Start";
+                } else if (currentSection > 0 && currentSection < totalSections - 1) {
+                    sectionTitleEl.textContent = `Section ${currentSection}: ${surveyData.sections[currentSection - 1].title}`;
+                    nextBtn.textContent = "Next";
+                }
+                
+                if (currentSection === totalSections - 1) { // On the last (submission) section
+                    nextBtn.classList.add('hidden');
+                    prevBtn.classList.add('hidden');
+                    sectionTitleEl.textContent = "Final Step";
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    prevBtn.classList.remove('hidden');
+                }
+
+                window.scrollTo(0, 0);
+            }
+
+            function generateCouponCode(name) {
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                return `OE-${initials}-${randomNum}`;
+            }
+
+            function runConfetti() {
+                const ctx = confettiCanvas.getContext('2d');
+                const W = window.innerWidth;
+                const H = window.innerHeight;
+                confettiCanvas.width = W;
+                confettiCanvas.height = H;
+                
+                const mp = 150; //max particles
+                const particles = [];
+                for (let i = 0; i < mp; i++) {
+                    particles.push({
+                        x: Math.random() * W, y: Math.random() * H, r: Math.random() * 4 + 1, d: Math.random() * mp,
+                        color: "rgba(0, 0, 0, " + (Math.random() * 0.5 + 0.3) + ")" // Monochromatic with varying opacity
+                    });
+                }
+
+                function draw() {
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.beginPath();
+                    for (let i = 0; i < mp; i++) {
+                        const p = particles[i];
+                        ctx.moveTo(p.x, p.y);
+                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2, true);
+                    }
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                    ctx.fill();
+                    update();
+                }
+
+                let angle = 0;
+                function update() {
+                    angle += 0.01;
+                    for (let i = 0; i < mp; i++) {
+                        const p = particles[i];
+                        p.y += Math.cos(angle + p.d) + 1 + p.r / 2;
+                        p.x += Math.sin(angle) * 2;
+
+                        if (p.x > W + 5 || p.x < -5 || p.y > H) {
+                            particles[i] = { ...p, y: -10, x: Math.random() * W };
+                        }
+                    }
+                }
+                const interval = setInterval(draw, 33);
+                setTimeout(() => clearInterval(interval), 5000);
+            }
+
+            async function generateAndSendPdf() {
+                submissionStatus.textContent = 'Generating PDF... Please wait.';
+                submitBtn.disabled = true;
+                
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'pt', 'a4');
+                const formElement = document.getElementById('research-form');
+                
+                formElement.querySelectorAll('.form-section').forEach(s => s.style.display = 'block');
+                document.getElementById('section-11').style.display = 'none'; // Hide submit section from PDF
+                
+                pdf.setFontSize(18);
+                pdf.text('Office Elites UAE - Formal Wear Market Research', 40, 60);
+                pdf.setFontSize(12);
+                pdf.text(`Participant: ${fullNameInput.value}`, 40, 80);
+                pdf.text(`Coupon Code: ${couponCode}`, 40, 95);
+                pdf.text(`Email: ${emailInput.value || 'N/A'} | Phone: ${phoneInput.value || 'N/A'}`, 40, 110);
+                pdf.line(40, 120, 555, 120);
+
+                try {
+                    const canvas = await html2canvas(formElement, { scale: 2, y: 0, windowHeight: formElement.scrollHeight, windowWidth: formElement.scrollWidth });
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    formElement.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
+                    document.getElementById(`section-${currentSection}`).style.display = 'block';
+
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const ratio = imgProps.height / imgProps.width;
+                    const contentWidth = pdfWidth - 80;
+                    const contentHeight = contentWidth * ratio;
+                    
+                    let heightLeft = contentHeight;
+                    let position = 140;
+
+                    pdf.addImage(imgData, 'PNG', 40, position, contentWidth, contentHeight);
+                    heightLeft -= (pdfHeight - 140);
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - contentHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 40, position, contentWidth, contentHeight);
+                        heightLeft -= pdfHeight;
+                    }
+                    
+                    submissionStatus.textContent = 'PDF generated! Preparing email...';
+
+                    const pdfOutput = pdf.output('blob');
+                    const reader = new FileReader();
+                    reader.readAsDataURL(pdfOutput); 
+                    reader.onloadend = function() {
+                        const subject = `Research Submission - ${fullNameInput.value}`;
+                        const body = `Please find the attached research form submission from ${fullNameInput.value}.\n\nCoupon Code: ${couponCode}\n\nThis email was generated automatically.`;
+                        const mailtoLink = `mailto:smabbaskazmim@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                        
+                        alert("Your email client will now open. Please attach the downloaded PDF to the email before sending.");
+                        pdf.save(`research-submission-${couponCode}.pdf`);
+                        window.location.href = mailtoLink;
+                        
+                        preSubmitContent.style.display = 'none';
+                        postSubmitContent.style.display = 'block';
+                        couponCodeReveal.textContent = couponCode;
+                        couponCard.style.display = 'block';
+                        runConfetti();
+                    }
+
+                } catch (error) {
+                    console.error("Error generating PDF:", error);
+                    submissionStatus.textContent = 'Error generating PDF. Please try again.';
+                    submitBtn.disabled = false;
+                    formElement.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
+                    document.getElementById(`section-${currentSection}`).style.display = 'block';
+                }
+            }
+
+            // --- Event Listeners ---
+            startSurveyBtn.addEventListener('click', (e) => {
+                e.target.classList.add('btn-pressed');
+                const name = fullNameInput.value.trim();
+                const email = emailInput.value.trim();
+                const phone = phoneInput.value.trim();
+
+                if (name && (email || phone)) {
+                    couponCode = generateCouponCode(name);
+                    authModal.style.display = 'none';
+                    mainForm.style.display = 'block';
+                    updateUI();
+                } else {
+                    authError.classList.remove('hidden');
+                }
+                setTimeout(() => e.target.classList.remove('btn-pressed'), 200);
+            });
+
+            nextBtn.addEventListener('click', (e) => {
+                e.target.classList.add('btn-pressed');
+                if (currentSection < totalSections - 1) {
+                    navigateToSection(currentSection + 1);
+                }
+                setTimeout(() => e.target.classList.remove('btn-pressed'), 200);
+            });
+
+            prevBtn.addEventListener('click', (e) => {
+                e.target.classList.add('btn-pressed');
+                if (currentSection > 0) {
+                    navigateToSection(currentSection - 1);
+                }
+                setTimeout(() => e.target.classList.remove('btn-pressed'), 200);
+            });
+            
+            submitBtn.addEventListener('click', (e) => {
+                e.target.classList.add('btn-pressed');
+                generateAndSendPdf();
+            });
+
+            // --- Initial Setup ---
+            buildForm();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
