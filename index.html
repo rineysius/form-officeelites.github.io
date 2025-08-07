@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Office Elites - UAE Formal Wear Market Research</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -165,7 +163,8 @@
             </div>
         </div>
         
-        <form id="research-form">
+        <!-- Netlify Form Handling: added name="office-elites-survey" and data-netlify="true" -->
+        <form id="research-form" name="office-elites-survey" data-netlify="true">
             <!-- Introduction Section -->
             <div id="section-0" class="form-section active">
                 <div class="bg-gray-50 p-8 rounded-lg text-center">
@@ -192,7 +191,7 @@
                         <p id="submission-status" class="mt-4 text-sm"></p>
                     </div>
                     <div id="post-submit-content" class="hidden">
-                        <p class="text-lg text-green-600 font-semibold mb-4">Submission Sent!</p>
+                        <p class="text-lg text-green-600 font-semibold mb-4">Submission Received!</p>
                         <div id="coupon-card">
                             <h3 class="text-lg font-bold text-yellow-400">YOUR FOUNDER REWARD</h3>
                             <p class="text-sm text-gray-300 mb-4">Exclusive Coupon Code</p>
@@ -404,13 +403,24 @@
             // --- Functions ---
 
             function buildForm() {
+                // Add hidden inputs for Netlify to recognize all fields
+                const hiddenInputs = document.createElement('div');
+                hiddenInputs.style.display = 'none';
+                hiddenInputs.innerHTML = `
+                    <input type="text" name="fullName" />
+                    <input type="email" name="email" />
+                    <input type="tel" name="phone" />
+                    <input type="text" name="couponCode" />
+                `;
+                researchForm.prepend(hiddenInputs);
+
                 surveyData.sections.forEach((section, sectionIndex) => {
                     const sectionDiv = document.createElement('div');
                     sectionDiv.id = `section-${sectionIndex + 1}`;
                     sectionDiv.className = 'form-section';
                     
                     let sectionHTML = `<h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-2">${section.title}</h2>`;
-                    sectionHTML += `<p class="text-gray-600 mb-6 italic whitespace-pre-line">${section.hook}</p>`; // Added hook message
+                    sectionHTML += `<p class="text-gray-600 mb-6 italic whitespace-pre-line">${section.hook}</p>`;
 
                     section.questions.forEach((q, qIndex) => {
                         sectionHTML += `<div class="mb-8">`;
@@ -490,7 +500,7 @@
 
                     updateUI();
                     isNavigating = false;
-                }, 400); // Match fadeOut animation duration
+                }, 400);
             }
 
             function updateUI() {
@@ -508,7 +518,7 @@
                     nextBtn.textContent = "Next";
                 }
                 
-                if (currentSection === totalSections - 1) { // On the last (submission) section
+                if (currentSection === totalSections - 1) {
                     nextBtn.classList.add('hidden');
                     prevBtn.classList.add('hidden');
                     sectionTitleEl.textContent = "Final Step";
@@ -533,12 +543,12 @@
                 confettiCanvas.width = W;
                 confettiCanvas.height = H;
                 
-                const mp = 150; //max particles
+                const mp = 150;
                 const particles = [];
                 for (let i = 0; i < mp; i++) {
                     particles.push({
                         x: Math.random() * W, y: Math.random() * H, r: Math.random() * 4 + 1, d: Math.random() * mp,
-                        color: "rgba(0, 0, 0, " + (Math.random() * 0.5 + 0.3) + ")" // Monochromatic with varying opacity
+                        color: "rgba(0, 0, 0, " + (Math.random() * 0.5 + 0.3) + ")"
                     });
                 }
 
@@ -572,81 +582,35 @@
                 setTimeout(() => clearInterval(interval), 5000);
             }
 
-            async function generateAndSendPdf() {
-                submissionStatus.textContent = 'Generating PDF... Please wait.';
+            const handleSubmission = (event) => {
+                event.preventDefault();
+                submissionStatus.textContent = 'Submitting... Please wait.';
                 submitBtn.disabled = true;
+
+                const formData = new FormData(researchForm);
+                // Add participant info and coupon code to the form data for submission
+                formData.set('fullName', fullNameInput.value);
+                formData.set('email', emailInput.value);
+                formData.set('phone', phoneInput.value);
+                formData.set('couponCode', couponCode);
                 
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'pt', 'a4');
-                const formElement = document.getElementById('research-form');
-                
-                formElement.querySelectorAll('.form-section').forEach(s => s.style.display = 'block');
-                document.getElementById('section-11').style.display = 'none'; // Hide submit section from PDF
-                
-                pdf.setFontSize(18);
-                pdf.text('Office Elites UAE - Formal Wear Market Research', 40, 60);
-                pdf.setFontSize(12);
-                pdf.text(`Participant: ${fullNameInput.value}`, 40, 80);
-                pdf.text(`Coupon Code: ${couponCode}`, 40, 95);
-                pdf.text(`Email: ${emailInput.value || 'N/A'} | Phone: ${phoneInput.value || 'N/A'}`, 40, 110);
-                pdf.line(40, 120, 555, 120);
-
-                try {
-                    const canvas = await html2canvas(formElement, { scale: 2, y: 0, windowHeight: formElement.scrollHeight, windowWidth: formElement.scrollWidth });
-                    const imgData = canvas.toDataURL('image/png');
-                    
-                    formElement.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
-                    document.getElementById(`section-${currentSection}`).style.display = 'block';
-
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    const imgProps = pdf.getImageProperties(imgData);
-                    const ratio = imgProps.height / imgProps.width;
-                    const contentWidth = pdfWidth - 80;
-                    const contentHeight = contentWidth * ratio;
-                    
-                    let heightLeft = contentHeight;
-                    let position = 140;
-
-                    pdf.addImage(imgData, 'PNG', 40, position, contentWidth, contentHeight);
-                    heightLeft -= (pdfHeight - 140);
-
-                    while (heightLeft > 0) {
-                        position = heightLeft - contentHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 40, position, contentWidth, contentHeight);
-                        heightLeft -= pdfHeight;
-                    }
-                    
-                    submissionStatus.textContent = 'PDF generated! Preparing email...';
-
-                    const pdfOutput = pdf.output('blob');
-                    const reader = new FileReader();
-                    reader.readAsDataURL(pdfOutput); 
-                    reader.onloadend = function() {
-                        const subject = `Research Submission - ${fullNameInput.value}`;
-                        const body = `Please find the attached research form submission from ${fullNameInput.value}.\n\nCoupon Code: ${couponCode}\n\nThis email was generated automatically.`;
-                        const mailtoLink = `mailto:smabbaskazmim@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                        
-                        alert("Your email client will now open. Please attach the downloaded PDF to the email before sending.");
-                        pdf.save(`research-submission-${couponCode}.pdf`);
-                        window.location.href = mailtoLink;
-                        
-                        preSubmitContent.style.display = 'none';
-                        postSubmitContent.style.display = 'block';
-                        couponCodeReveal.textContent = couponCode;
-                        couponCard.style.display = 'block';
-                        runConfetti();
-                    }
-
-                } catch (error) {
-                    console.error("Error generating PDF:", error);
-                    submissionStatus.textContent = 'Error generating PDF. Please try again.';
+                fetch("/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams(formData).toString()
+                })
+                .then(() => {
+                    preSubmitContent.style.display = 'none';
+                    postSubmitContent.style.display = 'block';
+                    couponCodeReveal.textContent = couponCode;
+                    couponCard.style.display = 'block';
+                    runConfetti();
+                })
+                .catch((error) => {
+                    submissionStatus.textContent = `Error: ${error}. Please try again.`;
                     submitBtn.disabled = false;
-                    formElement.querySelectorAll('.form-section').forEach(s => s.style.display = 'none');
-                    document.getElementById(`section-${currentSection}`).style.display = 'block';
-                }
-            }
+                });
+            };
 
             // --- Event Listeners ---
             startSurveyBtn.addEventListener('click', (e) => {
@@ -682,10 +646,7 @@
                 setTimeout(() => e.target.classList.remove('btn-pressed'), 200);
             });
             
-            submitBtn.addEventListener('click', (e) => {
-                e.target.classList.add('btn-pressed');
-                generateAndSendPdf();
-            });
+            submitBtn.addEventListener('click', handleSubmission);
 
             // --- Initial Setup ---
             buildForm();
